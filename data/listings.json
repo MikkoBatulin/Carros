@@ -1,83 +1,102 @@
 {
- "atualizado": "2026-09-24T15:25-03:00",
+ "atualizado": "2026-09-24T15:43-03:00",
  "fontes": {
   "webmotors": {
    "ok": false,
    "msg": "nenhum anúncio reconhecido (layout pode ter mudado)",
    "n": 0,
    "diag": {
-    "http": 200,
-    "bytes": 439689,
-    "titulo": "Comprar Carro Usado, Seminovo ou Novo 0km | Ofertas em Minas Gerais",
-    "tipos_script": {
-     "application/ld+json": 3,
-     "application/json": 1
+    "https://www.webmotors.com.br/carros/mg": {
+     "http": 200,
+     "bytes": 439442,
+     "titulo": "Comprar Carro Usado, Seminovo ou Novo 0km | Ofertas em Minas Gerais",
+     "R$": 0,
+     "reconhecidos": 0,
+     "listas": [
+      "55 itens: props.pageProps.dehydratedState.queries[1].state.data",
+      "27 itens: props.pageProps.searchFilters",
+      "24 itens: props.pageProps.catalogProps.items",
+      "23 itens: props.pageProps.dehydratedState.queries[0].state.data",
+      "7 itens: props.pageProps.searchFilters[1].items[0].items"
+     ],
+     "amostras": [
+      {
+       "lista": "geProps.dehydratedState.queries[1].state.data",
+       "item": {
+        "id": "3090",
+        "name": "LOCALIZA SEMINOVOS MATRIZ",
+        "alt": "Banner LOCALIZA SEMINOVOS MATRIZ",
+        "url": "lojaoficiallocalizaseminovos",
+        "bannerDesktop": "https://image.webmotors.com.br/feiroes/imagens/prd/_portal/fbd3823863_",
+        "bannerMobile": "https://image.webmotors.com.br/feiroes/imagens/prd/_portal/fbm3823863_",
+        "modalidade": "1"
+       }
+      },
+      {
+       "lista": "geProps.dehydratedState.queries[0].state.data",
+       "item": {
+        "name": "Carros elétricos",
+        "alt": "Banner Carros elétricos",
+        "url": "carros-eletricos",
+        "category": "1840168",
+        "categoryName": "Carros elétricos",
+        "primaryColor": "#c96601",
+        "secondaryColor": "#d8d100",
+        "bannerDesktop": "https://catalogo.webmotors.com.br/imagens/prod/fotos-temas/BannerDeskt",
+        "cardDesktop": "https://catalogo.webmotors.com.br/imagens/prod/fotos-temas/CardDesktop",
+        "bannerMobile": "https://catalogo.webmotors.com.br/imagens/prod/fotos-temas/BannerMobil",
+        "cardMobile": "https://catalogo.webmotors.com.br/imagens/prod/fotos-temas/CardMobile/",
+        "description": "Veja as melhores ofertas de carros elétricos"
+       }
+      }
+     ]
     },
-    "ids_script": [
-     "jsonld_online_business_rb",
-     "jsonld_breadcrumblist_rb",
-     "jsonld_offercatalog_rb",
-     "__NEXT_DATA__"
-    ],
-    "ocorrencias_R$": 0,
-    "ocorrencias_km": 18,
-    "texto_inicio": "Comprar Carro Usado, Seminovo ou Novo 0km | Ofertas em Minas Gerais Comprar Catálogo 0km Carros novos Carros usados Motos novas Motos usadas Vender Vender carro Vender moto Conheça o Cockpit Financiar Santander Financiamentos Simular financiamento Cu",
-    "objetos_reconhecidos": 0,
-    "next_props": [
-     "pageProps",
-     "__N_SSP"
-    ],
-    "next_pageProps": [
-     "seoBot",
-     "noIndex",
-     "time",
-     "date",
-     "dehydratedState",
-     "filters",
-     "url",
-     "breadcrumbListItems",
-     "catalogProps",
-     "count",
-     "searchFilters",
-     "dealerInfo"
-    ],
-    "listas": [
-     {
-      "n": 55,
-      "caminho": "props.pageProps.dehydratedState.queries[1].state.data"
-     },
-     {
-      "n": 27,
-      "caminho": "props.pageProps.searchFilters"
-     },
-     {
-      "n": 24,
-      "caminho": "props.pageProps.catalogProps.items"
-     },
-     {
-      "n": 23,
-      "caminho": "props.pageProps.dehydratedState.queries[0].state.data"
-     }
-    ],
-    "exemplo_item": {
-     "name": "PORSCHE CAYENNE 3.0 V6 E-HYBRID COUPÉ AWD TIPTRONIC S",
-     "image[0]": "https://image.webmotors.com.br/_fotos/anunciousados/gigante/2026/20260",
-     "offers.price": "899900",
-     "offers.url": "https://www.webmotors.com.br/comprar/porsche/cayenne/30-v6-e-hybrid-co",
-     "offers.availability": "https://schema.org/InStock",
-     "offers.priceCurrency": "BRL"
+    "https://www.webmotors.com.br/carros-usados/mg": {
+     "http": 200,
+     "bytes": 440452,
+     "titulo": "Comprar Carro Usado ou Seminovo | Ofertas em Minas Gerais",
+     "R$": 0,
+     "reconhecidos": 0,
+     "listas": [
+      "55 itens: props.pageProps.dehydratedState.queries[1].state.data",
+      "27 itens: props.pageProps.searchFilters",
+      "24 itens: props.pageProps.catalogProps.items",
+      "23 itens: props.pageProps.dehydratedState.queries[0].state.data",
+      "7 itens: props.pageProps.searchFilters[1].items[0].items"
+     ],
+     "amostras": [
+      {
+       "lista": "geProps.dehydratedState.queries[1].state.data",
+       "item": {
+        "id": "3090",
+        "name": "LOCALIZA SEMINOVOS MATRIZ",
+        "alt": "Banner LOCALIZA SEMINOVOS MATRIZ",
+        "url": "lojaoficiallocalizaseminovos",
+        "bannerDesktop": "https://image.webmotors.com.br/feiroes/imagens/prd/_portal/fbd3823863_",
+        "bannerMobile": "https://image.webmotors.com.br/feiroes/imagens/prd/_portal/fbm3823863_",
+        "modalidade": "1"
+       }
+      },
+      {
+       "lista": "geProps.dehydratedState.queries[0].state.data",
+       "item": {
+        "name": "Carros elétricos",
+        "alt": "Banner Carros elétricos",
+        "url": "carros-eletricos",
+        "category": "1840168",
+        "categoryName": "Carros elétricos",
+        "primaryColor": "#c96601",
+        "secondaryColor": "#d8d100",
+        "bannerDesktop": "https://catalogo.webmotors.com.br/imagens/prod/fotos-temas/BannerDeskt",
+        "cardDesktop": "https://catalogo.webmotors.com.br/imagens/prod/fotos-temas/CardDesktop",
+        "bannerMobile": "https://catalogo.webmotors.com.br/imagens/prod/fotos-temas/BannerMobil",
+        "cardMobile": "https://catalogo.webmotors.com.br/imagens/prod/fotos-temas/CardMobile/",
+        "description": "Veja as melhores ofertas de carros elétricos"
+       }
+      }
+     ]
     }
    }
-  },
-  "icarros": {
-   "ok": false,
-   "msg": "robots.txt não permite este endereço",
-   "n": 0
-  },
-  "olx": {
-   "ok": false,
-   "msg": "robots.txt não permite este endereço",
-   "n": 0
   }
  },
  "items": {}
