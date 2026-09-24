@@ -1,5 +1,5 @@
 {
- "atualizado": "2026-09-24T12:09-03:00",
+ "atualizado": "2026-09-24T12:29-03:00",
  "fontes": {
   "webmotors": {
    "ok": false,
@@ -7,7 +7,7 @@
    "n": 0,
    "diag": {
     "http": 200,
-    "bytes": 439113,
+    "bytes": 439553,
     "titulo": "Comprar Carro Usado, Seminovo ou Novo 0km | Ofertas em Minas Gerais",
     "tipos_script": {
      "application/ld+json": 3,
@@ -40,7 +40,33 @@
      "count",
      "searchFilters",
      "dealerInfo"
-    ]
+    ],
+    "listas": [
+     {
+      "n": 55,
+      "caminho": "props.pageProps.dehydratedState.queries[1].state.data"
+     },
+     {
+      "n": 27,
+      "caminho": "props.pageProps.searchFilters"
+     },
+     {
+      "n": 24,
+      "caminho": "props.pageProps.catalogProps.items"
+     },
+     {
+      "n": 23,
+      "caminho": "props.pageProps.dehydratedState.queries[0].state.data"
+     }
+    ],
+    "exemplo_item": {
+     "name": "BMW X5 3.0 I6 TURBO HÍBRIDO XDRIVE50E M SPORT AUTOMÁTICO",
+     "image[0]": "https://image.webmotors.com.br/_fotos/anunciousados/gigante/2026/20260",
+     "offers.price": "689900",
+     "offers.url": "https://www.webmotors.com.br/comprar/bmw/x5/30-i6-turbo-hibrido-xdrive",
+     "offers.availability": "https://schema.org/InStock",
+     "offers.priceCurrency": "BRL"
+    }
    }
   },
   "icarros": {
