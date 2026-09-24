@@ -1,1 +1,21 @@
-{"atualizado": null, "fontes": {}, "items": {}}
+{
+ "atualizado": "2026-09-24T12:00-03:00",
+ "fontes": {
+  "webmotors": {
+   "ok": false,
+   "msg": "nenhum anúncio reconhecido (layout pode ter mudado)",
+   "n": 0
+  },
+  "icarros": {
+   "ok": false,
+   "msg": "robots.txt não permite este endereço",
+   "n": 0
+  },
+  "olx": {
+   "ok": false,
+   "msg": "robots.txt não permite este endereço",
+   "n": 0
+  }
+ },
+ "items": {}
+}
