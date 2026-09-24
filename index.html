@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Carros usados em Minas</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef1f0;--card:#fff;--ink:#16232b;--mut:#5b6b73;--pri:#0e5a63;--star:#f2b705;--red:#b42318;--blue:#1f6feb;--line:#d5dcdf}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1a1f;--card:#17262d;--ink:#e8eef0;--mut:#9fb0b7;--pri:#5fc2cc;--line:#2b3e46}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 Archivo,system-ui,sans-serif}
+header,main{max-width:1000px;margin:auto;padding:16px}h1{font-size:1.6rem;font-weight:800;margin:0}h2{font-size:1.15rem;margin:28px 0 10px}
+.sub{color:var(--mut);margin:4px 0 12px}.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button,select,input,textarea{font:inherit;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+button{cursor:pointer}button.p{background:var(--pri);color:#fff;border-color:var(--pri)}:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.card{display:grid;grid-template-columns:200px 1fr;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:12px;text-decoration:none;color:inherit}
+.card.star{border:2px solid var(--star)}.card img{width:100%;height:100%;min-height:140px;object-fit:cover;background:var(--line)}
+.b{padding:12px 14px}.t{font-weight:800;font-size:1.05rem}.price{font-size:1.4rem;font-weight:800;color:var(--pri)}.m{color:var(--mut);font-size:.9rem}
+.tag{display:inline-block;font-size:.78rem;font-weight:600;padding:2px 8px;border-radius:99px;margin:0 6px 6px 0;background:var(--line)}
+.tag.s{background:var(--star);color:#3a2b00}.tag.n{background:var(--blue);color:#fff}.tag.r{background:var(--red);color:#fff}
+.warn{background:#fdecea;color:#7a1a12;border-radius:8px;padding:10px 12px;margin:8px 0}.ok{padding:24px;text-align:center;color:var(--mut)}
+#cfg{display:none;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin:10px 0}#cfg.on{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+label{display:grid;gap:4px;font-size:.85rem;color:var(--mut)}#cfg .w{grid-column:1/-1}
+@media(max-width:560px){.card{grid-template-columns:1fr}.card img{height:180px}}
+</style></head><body>
+<header><h1>Carros usados em Minas Gerais</h1><div class="sub" id="upd">Carregando…</div>
+<div class="bar"><select id="ord" aria-label="Ordenar"><option value="preco">Menor preço</option><option value="km">Menor quilometragem</option><option value="ano">Ano mais novo</option><option value="rec">Anúncios mais recentes</option></select>
+<button id="bcfg">Ajustar filtros</button></div>
+<div id="cfg"></div><div id="avisos"></div></header><main id="out"></main>
+<script>
+const RMBH="Belo Horizonte,Betim,Contagem,Ibirité,Nova Lima,Sabará,Santa Luzia,Ribeirão das Neves,Vespasiano,Lagoa Santa,Sarzedo,Mateus Leme,Brumadinho,Caeté,Esmeraldas,Igarapé,Juatuba,Mário Campos,Pedro Leopoldo,São Joaquim de Bicas,São José da Lapa,Confins,Raposos,Rio Acima,Jaboticatubas,Matozinhos,Capim Branco,Florestal,Rio Manso,Itatiaiuçu,Baldim,Nova União,Taquaraçu de Minas,Itaguara";
+const PADRAO={preco_max:65000,km_max:70000,ano_min:2015,km_estrela:50000,km_min_abs:1000,km_min_ano:2000,excluir_leilao:true,cidades:"",marcas:"",sites:"webmotors,icarros,olx",rmbh:RMBH};
+const CAMPOS=[["preco_max","Preço máximo (R$)"],["km_max","Km máximo"],["ano_min","Ano mínimo"],["km_estrela","Estrela: km abaixo de"],["km_min_abs","Km mínimo aceito (anti-fraude)"],["km_min_ano","Km mínimo por ano de uso"],["cidades","Só estas cidades (vazio = todas de MG)"],["marcas","Só estas marcas/modelos (vazio = todos)"],["sites","Sites (webmotors,icarros,olx)"]];
+let cfg={...PADRAO,...JSON.parse(localStorage.getItem("cfg")||"{}")},D=null;
+const n=s=>(s||"").toString().normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
+const lista=s=>n(s).split(",").map(x=>x.trim()).filter(Boolean);
+const R=v=>v.toLocaleString("pt-BR",{style:"currency",currency:"BRL",maximumFractionDigits:0});
+function kmSuspeito(i){if(i.km==null)return false;const idade=Math.max(0,new Date().getFullYear()-(i.ano||new Date().getFullYear())-1);return i.km<cfg.km_min_abs||i.km<idade*cfg.km_min_ano}
+function motivo(i){ // null = passa; texto = motivo do descarte
+ if(!i.ativo)return"saiu";if(!lista(cfg.sites).includes(n(i.site)))return"site";
+ if(n(i.uf)&&!["mg","minas gerais"].includes(n(i.uf)))return"uf";if(!n(i.uf)&&!n(i.cidade))return"dado";
+ if(i.preco>cfg.preco_max)return"preco";if(i.ano==null)return"dado";if(i.ano<cfg.ano_min)return"ano";
+ if(i.km==null)return"dado";if(i.km>cfg.km_max)return"km";if(kmSuspeito(i))return"kmfalso";
+ if(i.cambio!=="automatico")return i.cambio?"cambio":"dado";if(i.vendedor!=="pf")return"dado";
+ if(cfg.excluir_leilao&&i.leilao===true)return"leilao";
+ const c=lista(cfg.cidades);if(c.length&&!c.includes(n(i.cidade)))return"cidade";
+ const m=lista(cfg.marcas);if(m.length&&!m.some(x=>n(i.marca+" "+i.modelo+" "+i.titulo).includes(x)))return"marca";return null}
+const estrela=i=>i.unico_dono===true&&i.km<cfg.km_estrela&&i.vendedor==="pf"&&lista(cfg.rmbh).includes(n(i.cidade));
+function card(i){const h=D.atualizado.slice(0,10),nov=i.primeira_vez===h,red=i.reduzido_em&&(new Date(h)-new Date(i.reduzido_em))/864e5<=3;
+ const fontes=i.fontes.map(f=>f.site).join(", "),nome=[i.marca,i.modelo,i.versao].filter(Boolean).join(" ")||i.titulo;
+ return`<a class="card ${estrela(i)?"star":""}" href="${i.url}" target="_blank" rel="noopener"><img loading="lazy" src="${i.foto||""}" alt="" onerror="this.style.visibility='hidden'"><div class="b">
+ ${estrela(i)?'<span class="tag s">⭐ OPORTUNIDADE</span>':""}${nov?'<span class="tag n">NOVO</span>':""}${red?`<span class="tag r">PREÇO REDUZIDO (era ${R(i.preco_anterior)})</span>`:""}
+ <div class="t">${nome}</div><div class="price">${R(i.preco)}</div>
+ <div class="m">${i.ano} · ${i.km.toLocaleString("pt-BR")} km · Automático · ${i.cidade||"cidade não informada"}${i.uf?"/"+i.uf:""}</div>
+ <div class="m">Pessoa física · ${i.unico_dono?"Único dono":"Único dono não informado"} · ${i.leilao===false?"Sem leilão (informado)":"Leilão: sem indício no anúncio"}</div>
+ <div class="m">Fonte: ${fontes} · Encontrado em ${new Date(i.primeira_vez+"T12:00").toLocaleDateString("pt-BR")}</div></div></a>`}
+function ordenar(a){const o=document.getElementById("ord").value;return[...a].sort((x,y)=>o==="preco"?x.preco-y.preco:o==="km"?x.km-y.km:o==="ano"?y.ano-x.ano:y.primeira_vez.localeCompare(x.primeira_vez))}
+function render(){const todos=Object.values(D.items),ok=[],desc={};
+ todos.forEach(i=>{const m=motivo(i);if(!m)ok.push(i);else desc[m]=(desc[m]||0)+1});
+ const st=ordenar(ok.filter(estrela)),ger=ordenar(ok.filter(i=>!estrela(i))),saiu=todos.filter(i=>!i.ativo&&i.saiu_em);
+ let h="";if(!ok.length)h='<div class="ok"><b>Sem ofertas por hoje.</b></div>';
+ if(st.length)h+=`<h2>⭐ Oportunidades (${st.length})</h2>`+st.map(card).join("");
+ if(ger.length)h+=`<h2>Lista geral (${ger.length})</h2>`+ger.map(card).join("");
+ const nd=(desc.dado||0),nl=(desc.leilao||0)+(desc.kmfalso||0);
+ if(nd||nl)h+=`<p class="m">Descartados por segurança: ${nd} sem dado confirmado (vendedor, câmbio, km ou cidade), ${desc.leilao||0} com indício de leilão, ${desc.kmfalso||0} com km suspeita.</p>`;
+ if(saiu.length)h+=`<details><summary>Saíram do ar (${saiu.length})</summary>${saiu.slice(0,30).map(i=>`<p class="m">${[i.marca,i.modelo].join(" ")} ${i.ano} — ${R(i.preco)} — saiu em ${i.saiu_em}</p>`).join("")}</details>`;
+ document.getElementById("out").innerHTML=h}
+function cabecalho(){const d=D.atualizado?new Date(D.atualizado):null;
+ document.getElementById("upd").textContent=d?`Última pesquisa: ${d.toLocaleDateString("pt-BR")} às ${d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}`:"Ainda não houve pesquisa.";
+ document.getElementById("avisos").innerHTML=Object.entries(D.fontes||{}).filter(([,s])=>!s.ok).map(([k,s])=>`<div class="warn"><b>${k}</b> não pôde ser pesquisado hoje: ${s.msg}</div>`).join("")}
+function painel(){const c=document.getElementById("cfg");
+ c.innerHTML=CAMPOS.map(([k,l])=>`<label>${l}<input data-k="${k}" value="${cfg[k]}"></label>`).join("")+
+ `<label class="w">Cidades da região de Belo Horizonte (critério da estrela)<textarea data-k="rmbh" rows="3">${cfg.rmbh}</textarea></label>
+ <label class="w"><span><input type="checkbox" id="lei" ${cfg.excluir_leilao?"checked":""}> Excluir anúncios com indício de leilão</span></label>
+ <div class="w bar"><button class="p" id="sv">Salvar</button><button id="rs">Voltar ao padrão</button></div>`;
+ c.querySelector("#sv").onclick=()=>{c.querySelectorAll("[data-k]").forEach(e=>{const k=e.dataset.k;cfg[k]=typeof PADRAO[k]==="number"?Number(e.value)||PADRAO[k]:e.value});cfg.excluir_leilao=c.querySelector("#lei").checked;localStorage.setItem("cfg",JSON.stringify(cfg));render()};
+ c.querySelector("#rs").onclick=()=>{localStorage.removeItem("cfg");cfg={...PADRAO};painel();render()}}
+document.getElementById("bcfg").onclick=()=>document.getElementById("cfg").classList.toggle("on");
+document.getElementById("ord").onchange=render;
+fetch("data/listings.json?"+Date.now()).then(r=>r.json()).then(j=>{D=j;cabecalho();painel();render()}).catch(()=>document.getElementById("upd").textContent="Não foi possível carregar os dados.");
+</script></body></html>

@@ -1,0 +1,11 @@
+{
+  "pausa_segundos": 4,
+  "max_detalhes_por_site": 40,
+  "coleta": {"preco_max": 80000, "km_max": 90000, "ano_min": 2013},
+  "palavras_leilao": ["leilão", "leilao", "leiloado", "leilões", "remarcado", "remarcação de chassi", "salvado", "sucata", "recuperado de seguradora", "recuperado de financeira", "recuperado de sinistro", "remarketing"],
+  "fontes": {
+    "webmotors": {"ativa": true, "urls": ["https://www.webmotors.com.br/carros/mg"], "paginas": 3, "param_pagina": "page"},
+    "icarros":   {"ativa": true, "urls": ["https://www.icarros.com.br/comprar/minas-gerais"], "paginas": 3, "param_pagina": "pagina"},
+    "olx":       {"ativa": true, "urls": ["https://www.olx.com.br/autos-e-pecas/carros-vans-e-utilitarios/estado-mg"], "paginas": 3, "param_pagina": "o"}
+  }
+}
