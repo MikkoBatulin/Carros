@@ -149,34 +149,27 @@ def listas(o, cam="", saida=None):
         for k, v in o.items(): listas(v, f"{cam}.{k}" if cam else k, saida)
     return saida
 
-def caminhos(o, p="", out=None):
+def caminhos(o, p="", out=None, lim=22):
     out = {} if out is None else out
-    if len(out) >= 60: return out
+    if len(out) >= lim: return out
     if isinstance(o, dict):
-        for k, v in o.items(): caminhos(v, f"{p}.{k}" if p else k, out)
+        for k, v in o.items(): caminhos(v, f"{p}.{k}" if p else k, out, lim)
     elif isinstance(o, list):
-        for i, v in enumerate(o[:2]): caminhos(v, f"{p}[{i}]", out)
+        for i, v in enumerate(o[:2]): caminhos(v, f"{p}[{i}]", out, lim)
     else: out[p] = str(o)[:70]
     return out
 
 def diagnostico(html):
-    """Resumo técnico do que o site devolveu (para eu entender por que nada foi reconhecido)."""
-    from collections import Counter
+    """Resumo técnico do que o site devolveu (curto, para caber num print)."""
     t = re.search(r"<title[^>]*>(.*?)</title>", html, re.S | re.I)
-    d = {"http": LAST.get("status"), "bytes": len(html), "titulo": t.group(1).strip()[:120] if t else "",
-         "tipos_script": dict(Counter(re.findall(r'<script[^>]*type="([^"]+)"', html))),
-         "ids_script": re.findall(r'<script[^>]*id="([^"]+)"', html)[:8],
-         "ocorrencias_R$": html.count("R$"), "ocorrencias_km": len(re.findall(r"\d\s?km", html, re.I)),
-         "texto_inicio": re.sub(r"\s+", " ", texto_pagina(html)).strip()[:250]}
-    d["objetos_reconhecidos"] = sum(1 for b in blobs(html) for x in walk(b) if normaliza(x, "https://x/"))
+    d = {"http": LAST.get("status"), "bytes": len(html), "titulo": t.group(1).strip()[:80] if t else "",
+         "R$": html.count("R$"), "reconhecidos": sum(1 for b in blobs(html) for x in walk(b) if normaliza(x, "https://x/"))}
     for b in blobs(html):
         if isinstance(b, dict) and "props" in b:
-            d["next_props"] = list(b["props"].keys())[:8]
-            d["next_pageProps"] = list((b["props"].get("pageProps") or {}).keys())[:12]
-            ls = listas(b)
-            d["listas"] = [{"n": n, "caminho": c[-110:]} for n, c, _ in sorted(ls, key=lambda t: -t[0])[:4]]
-            pref = [t for t in ls if re.search(r"price|preco", json.dumps(t[2]).lower())] or ls
-            if pref: d["exemplo_item"] = caminhos(max(pref, key=lambda t: t[0])[2])
+            ls = sorted(listas(b), key=lambda t: -t[0])
+            dh = [t for t in ls if "dehydratedState" in t[1]][:3]
+            d["listas"] = [f"{n} itens: {c[-70:]}" for n, c, _ in ls[:5]]
+            d["amostras"] = [{"lista": c[-45:], "item": caminhos(x)} for n, c, x in dh]
     return d
 
 def prelim(it):
@@ -190,17 +183,21 @@ def main():
         if not f["ativa"]: continue
         st = status[site] = {"ok": True, "msg": "", "n": 0}; achados = {}; amostra = None
         try:
+            erro = ""
             for base in f["urls"]:
-                for p in range(1, f["paginas"] + 1):
-                    url = base if p == 1 else f"{base}{'&' if '?' in base else '?'}{f['param_pagina']}={p}"
-                    html = baixar(url)
-                    if p == 1 and base == f["urls"][0]: st["diag"] = diagnostico(html); amostra = html[:30000]
-                    for b in blobs(html):
-                        for d in walk(b):
-                            it = normaliza(d, url)
-                            if it and prelim(it): achados[it["url"]] = it
+                try:
+                    for p in range(1, f["paginas"] + 1):
+                        url = base if p == 1 else f"{base}{'&' if '?' in base else '?'}{f['param_pagina']}={p}"
+                        html = baixar(url)
+                        if p == 1: st.setdefault("diag", {})[base] = diagnostico(html); amostra = amostra or html[:30000]
+                        for b in blobs(html):
+                            for d in walk(b):
+                                it = normaliza(d, url)
+                                if it and prelim(it): achados[it["url"]] = it
+                except Exception as e:
+                    erro = str(e); st.setdefault("diag", {})[base] = {"erro": erro}
             st["n"] = len(achados)
-            if not achados: st.update(ok=False, msg="nenhum anúncio reconhecido (layout pode ter mudado)")
+            if not achados: st.update(ok=False, msg=erro or "nenhum anúncio reconhecido (layout pode ter mudado)")
         except Bloqueado as e: st.update(ok=False, msg=str(e))
         except Exception as e: st.update(ok=False, msg=f"erro: {e}")
         if amostra and not achados: open(f"data/debug_{site}.html", "w", encoding="utf-8").write(amostra)
