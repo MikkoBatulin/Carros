@@ -55,7 +55,9 @@ def pick(d, keys):
         if v not in (None, "", [], {}): return v
 
 def tx(v):
-    if isinstance(v, dict): v = v.get("name") or v.get("value") or v.get("url") or v.get("src") or ""
+    if isinstance(v, dict):
+        lv = {str(k).lower(): x for k, x in v.items()}
+        v = lv.get("name") or lv.get("value") or lv.get("url") or lv.get("src") or lv.get("photopath") or ""
     if isinstance(v, list): return tx(v[0]) if v else ""
     return "" if v is None else str(v)
 
@@ -68,24 +70,38 @@ def num(v):
 
 def norm(s): return re.sub(r"\s+", " ", unicodedata.normalize("NFD", tx(s)).encode("ascii", "ignore").decode().lower()).strip()
 
+def achata(d, prof=2):
+    out = {}
+    for k, v in d.items():
+        if isinstance(v, dict):
+            out.setdefault(k, v)
+            if prof > 1:
+                for kk, vv in achata(v, prof - 1).items(): out.setdefault(kk, vv)
+        elif not isinstance(v, list): out.setdefault(k, v)
+    return out
+
 def normaliza(d, base):
+    d = {**achata(d), **d}
     o = d.get("offers"); o = o[0] if isinstance(o, list) and o else o
     if isinstance(o, dict): d = {**d, "price": o.get("price"), "url": d.get("url") or o.get("url")}
     preco, url = num(pick(d, ["price", "preco", "valor"])), tx(pick(d, ["url", "link", "permalink", "href"]))
     ano = num(pick(d, ["vehicleModelDate", "modelYear", "yearModel", "anoModelo", "year", "ano"]))
-    km = num(pick(d, ["mileageFromOdometer", "mileage", "km", "quilometragem", "kilometragem"]))
+    km = num(pick(d, ["mileageFromOdometer", "mileage", "odometer", "odometro", "km", "quilometragem", "kilometragem"]))
     if not preco or preco < 1000 or not url or (ano is None and km is None): return None
     if ano and not 1990 <= ano <= 2030: ano = None
     loc = tx(pick(d, ["city", "cidade", "addressLocality", "municipio", "location"]))
     uf = tx(pick(d, ["state", "uf", "estado", "addressRegion"]))
     m = re.match(r"(.+?)\s*[-,/]\s*([A-Za-z]{2})$", loc)
     if m: loc, uf = m.group(1), uf or m.group(2)
+    if re.search(r"\bmg\b|minas", norm(uf)): uf = "MG"
     blob = json.dumps(d, ensure_ascii=False).lower()
-    vend = "pj" if re.search(r"lojista|pessoa jur[ií]dica|professional\W+true|revenda|concession", blob) else \
-           "pf" if re.search(r"particular|pessoa f[ií]sica", blob) else None
+    stp = norm(pick(d, ["sellerType", "tipoVendedor", "advertiserType", "tipoAnunciante"]))
+    vend = "pf" if stp in ("pf", "particular", "pessoa fisica", "private") else "pj" if stp in ("pj", "lojista", "loja", "pessoa juridica", "concessionaria", "dealer") else None
+    vend = vend or ("pj" if re.search(r"lojista|pessoa jur[ií]dica|professional\W+true|revenda|concession", blob) else
+                    "pf" if re.search(r"particular|pessoa f[ií]sica", blob) else None)
     return {"url": urljoin(base, url), "titulo": tx(pick(d, ["name", "title", "titulo"])), "marca": tx(pick(d, ["brand", "marca", "make"])),
             "modelo": tx(pick(d, ["model", "modelo"])), "versao": tx(pick(d, ["version", "versao", "trim"])), "ano": ano, "preco": preco, "km": km,
-            "cambio": cambio(blob), "cidade": loc.strip(), "uf": uf.strip().upper()[:2] if len(uf.strip()) <= 2 else uf.strip(),
+            "cambio": cambio(tx(pick(d, ["transmission", "cambio", "gearbox", "vehicleTransmission"])) or blob), "cidade": loc.strip(), "uf": uf.strip().upper()[:2] if len(uf.strip()) <= 2 else uf.strip(),
             "vendedor": vend, "unico_dono": True if re.search(r"[uú]nico dono", blob) else None,
             "foto": tx(pick(d, ["image", "photo", "foto", "thumbnail", "images"])), "_blob": blob}
 
@@ -124,6 +140,25 @@ def detalhar(it):
     it["vendedor"] = it.get("vendedor") or pf
     it["detalhado"] = True
 
+def listas(o, cam="", saida=None):
+    saida = [] if saida is None else saida
+    if isinstance(o, list):
+        if len(o) >= 5 and all(isinstance(x, dict) for x in o[:5]): saida.append((len(o), cam, o[0]))
+        for i, v in enumerate(o[:3]): listas(v, f"{cam}[{i}]", saida)
+    elif isinstance(o, dict):
+        for k, v in o.items(): listas(v, f"{cam}.{k}" if cam else k, saida)
+    return saida
+
+def caminhos(o, p="", out=None):
+    out = {} if out is None else out
+    if len(out) >= 60: return out
+    if isinstance(o, dict):
+        for k, v in o.items(): caminhos(v, f"{p}.{k}" if p else k, out)
+    elif isinstance(o, list):
+        for i, v in enumerate(o[:2]): caminhos(v, f"{p}[{i}]", out)
+    else: out[p] = str(o)[:70]
+    return out
+
 def diagnostico(html):
     """Resumo técnico do que o site devolveu (para eu entender por que nada foi reconhecido)."""
     from collections import Counter
@@ -138,6 +173,10 @@ def diagnostico(html):
         if isinstance(b, dict) and "props" in b:
             d["next_props"] = list(b["props"].keys())[:8]
             d["next_pageProps"] = list((b["props"].get("pageProps") or {}).keys())[:12]
+            ls = listas(b)
+            d["listas"] = [{"n": n, "caminho": c[-110:]} for n, c, _ in sorted(ls, key=lambda t: -t[0])[:4]]
+            pref = [t for t in ls if re.search(r"price|preco", json.dumps(t[2]).lower())] or ls
+            if pref: d["exemplo_item"] = caminhos(max(pref, key=lambda t: t[0])[2])
     return d
 
 def prelim(it):
