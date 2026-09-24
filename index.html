@@ -55,7 +55,7 @@ function ordenar(a){const o=document.getElementById("ord").value;return[...a].so
 function render(){const todos=Object.values(D.items),ok=[],desc={};
  todos.forEach(i=>{const m=motivo(i);if(!m)ok.push(i);else desc[m]=(desc[m]||0)+1});
  const st=ordenar(ok.filter(estrela)),ger=ordenar(ok.filter(i=>!estrela(i))),saiu=todos.filter(i=>!i.ativo&&i.saiu_em);
- let h="";if(!ok.length)h='<div class="ok"><b>Sem ofertas por hoje.</b></div>';
+ let h="";const fs=Object.values(D.fontes||{});if(!ok.length)h=fs.length&&fs.every(s=>!s.ok)?'<div class="ok"><b>Nenhuma fonte pôde ser pesquisada hoje.</b><br>Veja os avisos acima.</div>':'<div class="ok"><b>Sem ofertas por hoje.</b></div>';
  if(st.length)h+=`<h2>⭐ Oportunidades (${st.length})</h2>`+st.map(card).join("");
  if(ger.length)h+=`<h2>Lista geral (${ger.length})</h2>`+ger.map(card).join("");
  const nd=(desc.dado||0),nl=(desc.leilao||0)+(desc.kmfalso||0);
@@ -64,7 +64,7 @@ function render(){const todos=Object.values(D.items),ok=[],desc={};
  document.getElementById("out").innerHTML=h}
 function cabecalho(){const d=D.atualizado?new Date(D.atualizado):null;
  document.getElementById("upd").textContent=d?`Última pesquisa: ${d.toLocaleDateString("pt-BR")} às ${d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}`:"Ainda não houve pesquisa.";
- document.getElementById("avisos").innerHTML=Object.entries(D.fontes||{}).filter(([,s])=>!s.ok).map(([k,s])=>`<div class="warn"><b>${k}</b> não pôde ser pesquisado hoje: ${s.msg}</div>`).join("")}
+ document.getElementById("avisos").innerHTML=Object.entries(D.fontes||{}).filter(([,s])=>!s.ok).map(([k,s])=>`<div class="warn"><b>${k}</b> não pôde ser pesquisado hoje: ${s.msg}${s.diag?`<details><summary>Detalhes técnicos</summary><pre style="white-space:pre-wrap;font-size:.75rem">${JSON.stringify(s.diag,null,1)}</pre></details>`:""}</div>`).join("")}
 function painel(){const c=document.getElementById("cfg");
  c.innerHTML=CAMPOS.map(([k,l])=>`<label>${l}<input data-k="${k}" value="${cfg[k]}"></label>`).join("")+
  `<label class="w">Cidades da região de Belo Horizonte (critério da estrela)<textarea data-k="rmbh" rows="3">${cfg.rmbh}</textarea></label>

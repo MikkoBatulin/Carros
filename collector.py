@@ -14,6 +14,7 @@ HOJE = AGORA.date().isoformat()
 
 class Bloqueado(Exception): pass
 _robots = {}
+LAST = {}
 
 def permitido(url):
     host = "{0.scheme}://{0.netloc}".format(urlparse(url))
@@ -29,6 +30,7 @@ def baixar(url):
     if not permitido(url): raise Bloqueado("robots.txt não permite este endereço")
     time.sleep(CFG["pausa_segundos"])
     r = S.get(url, timeout=30)
+    LAST["status"] = r.status_code
     if r.status_code in (401, 403, 429) or "captcha" in r.text[:5000].lower():
         raise Bloqueado(f"site bloqueou acesso automatizado (HTTP {r.status_code})")
     r.raise_for_status()
@@ -122,6 +124,22 @@ def detalhar(it):
     it["vendedor"] = it.get("vendedor") or pf
     it["detalhado"] = True
 
+def diagnostico(html):
+    """Resumo técnico do que o site devolveu (para eu entender por que nada foi reconhecido)."""
+    from collections import Counter
+    t = re.search(r"<title[^>]*>(.*?)</title>", html, re.S | re.I)
+    d = {"http": LAST.get("status"), "bytes": len(html), "titulo": t.group(1).strip()[:120] if t else "",
+         "tipos_script": dict(Counter(re.findall(r'<script[^>]*type="([^"]+)"', html))),
+         "ids_script": re.findall(r'<script[^>]*id="([^"]+)"', html)[:8],
+         "ocorrencias_R$": html.count("R$"), "ocorrencias_km": len(re.findall(r"\d\s?km", html, re.I)),
+         "texto_inicio": re.sub(r"\s+", " ", texto_pagina(html)).strip()[:250]}
+    d["objetos_reconhecidos"] = sum(1 for b in blobs(html) for x in walk(b) if normaliza(x, "https://x/"))
+    for b in blobs(html):
+        if isinstance(b, dict) and "props" in b:
+            d["next_props"] = list(b["props"].keys())[:8]
+            d["next_pageProps"] = list((b["props"].get("pageProps") or {}).keys())[:12]
+    return d
+
 def prelim(it):
     c = CFG["coleta"]
     return (it["preco"] <= c["preco_max"] and (it["km"] is None or it["km"] <= c["km_max"]) and (it["ano"] is None or it["ano"] >= c["ano_min"])
@@ -131,12 +149,14 @@ def main():
     status, vistos = {}, {}
     for site, f in CFG["fontes"].items():
         if not f["ativa"]: continue
-        st = status[site] = {"ok": True, "msg": "", "n": 0}; achados = {}
+        st = status[site] = {"ok": True, "msg": "", "n": 0}; achados = {}; amostra = None
         try:
             for base in f["urls"]:
                 for p in range(1, f["paginas"] + 1):
                     url = base if p == 1 else f"{base}{'&' if '?' in base else '?'}{f['param_pagina']}={p}"
-                    for b in blobs(baixar(url)):
+                    html = baixar(url)
+                    if p == 1 and base == f["urls"][0]: st["diag"] = diagnostico(html); amostra = html[:30000]
+                    for b in blobs(html):
                         for d in walk(b):
                             it = normaliza(d, url)
                             if it and prelim(it): achados[it["url"]] = it
@@ -144,6 +164,7 @@ def main():
             if not achados: st.update(ok=False, msg="nenhum anúncio reconhecido (layout pode ter mudado)")
         except Bloqueado as e: st.update(ok=False, msg=str(e))
         except Exception as e: st.update(ok=False, msg=f"erro: {e}")
+        if amostra and not achados: open(f"data/debug_{site}.html", "w", encoding="utf-8").write(amostra)
         limite = CFG["max_detalhes_por_site"]
         for it in achados.values():
             it["site"] = site
